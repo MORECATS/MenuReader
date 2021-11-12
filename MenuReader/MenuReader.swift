@@ -67,7 +67,7 @@ extension MenuReader
         }
         
         menu.subitems.forEach() { item in
-            print("\(padding)\(item.name): \(item.enabled)")
+            print("\(padding)\(item.name)")
             prettyPrint(item)
         }
     }
