@@ -35,7 +35,7 @@ if CommandLine.arguments.count > 1
     if CommandLine.arguments.count == 3,
        let action = CommandLine.arguments.last,
        let menuRoot = menuRoot,
-       let item = menuRoot.findSubitems(with: action)?.first
+       let item = menuRoot.filterSubitems({ $0.name == action })?.first
     {
         MenuReader.performAction(at: item)
     }
@@ -44,9 +44,8 @@ else if let menu = MenuReader.getMenuItems()
 {
     MenuReader.prettyPrint(menu)
     
-    let items = menu.findSubitems(with: "About Xcode")
-    if let item = items?.first
+    if let items = menu.filterSubitems({ $0.name == "About Xcode" })
     {
-        MenuReader.performAction(at: item)
+        MenuReader.performAction(at: items.first!)
     }
 }
