@@ -24,19 +24,19 @@ extension MenuReader
             self.axUIElement = axUIElement
             self.parent = parent
         }
-        
-        func findSubitems(with name: String) -> [MenuItem]?
+                
+        func filterSubitems(_ isIncluded: (MenuItem) -> Bool) -> [MenuItem]?
         {
             var items = [MenuItem]()
-            findSubitems(with: name, items: &items)
+            filterSubitems(isIncluded, items: &items)
             return items.isEmpty ? nil : items
         }
         
-        private func findSubitems(with name: String, items: inout [MenuItem])
+        private func filterSubitems(_ isIncluded: (MenuItem) -> Bool, items: inout [MenuItem])
         {
-            items += subitems.filter({ $0.name == name })
+            items += subitems.filter(isIncluded)
             subitems.forEach() {
-                $0.findSubitems(with: name, items: &items)
+                $0.filterSubitems(isIncluded, items: &items)
             }
         }
         
