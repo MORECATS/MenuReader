@@ -44,7 +44,8 @@ else if let menu = MenuReader.getMenuItems()
 {
     MenuReader.prettyPrint(menu)
     
-    let items = menu.findSubitems(with: "About Xcode")
+    let items = menu.findSubitems(with: "Report an Issue")
+    print("items: \(items?.first?.name)")
     if let item = items?.first
     {
         MenuReader.performAction(at: item)
