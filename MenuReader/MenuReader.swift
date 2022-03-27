@@ -25,18 +25,18 @@ extension MenuReader
             self.parent = parent
         }
                 
-        func filterSubitems(_ isIncluded: (MenuItem) -> Bool) -> [MenuItem]?
+        func filter(_ isIncluded: (MenuItem) -> Bool) -> [MenuItem]?
         {
             var items = [MenuItem]()
-            filterSubitems(isIncluded, items: &items)
+            filter(isIncluded, items: &items)
             return items.isEmpty ? nil : items
         }
         
-        private func filterSubitems(_ isIncluded: (MenuItem) -> Bool, items: inout [MenuItem])
+        private func filter(_ isIncluded: (MenuItem) -> Bool, items: inout [MenuItem])
         {
             items += subitems.filter(isIncluded)
             subitems.forEach() {
-                $0.filterSubitems(isIncluded, items: &items)
+                $0.filter(isIncluded, items: &items)
             }
         }
         

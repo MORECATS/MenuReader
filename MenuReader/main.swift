@@ -35,7 +35,7 @@ if CommandLine.arguments.count > 1
     if CommandLine.arguments.count == 3,
        let action = CommandLine.arguments.last,
        let menuRoot = menuRoot,
-       let item = menuRoot.findSubitems(with: action)?.first
+       let item = menuRoot.filter({ $0.name == action })?.first
     {
         MenuReader.performAction(at: item)
     }
@@ -44,9 +44,7 @@ else if let menu = MenuReader.getMenuItems()
 {
     MenuReader.prettyPrint(menu)
     
-    let items = menu.findSubitems(with: "Report an Issue")
-    print("items: \(items?.first?.name)")
-    if let item = items?.first
+    if let item = menu.filter({ $0.name == "Report an Issue" })?.first
     {
         MenuReader.performAction(at: item)
     }
