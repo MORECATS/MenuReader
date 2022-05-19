@@ -40,12 +40,7 @@ if CommandLine.arguments.count > 1
         MenuReader.performAction(at: item)
     }
 }
-else if let menu = MenuReader.getMenuItems()
+else if let menu = MenuReader.getMenuItems(app: NSWorkspace.shared.menuBarOwningApplication)
 {
-    MenuReader.prettyPrint(menu)
-    
-    if let item = menu.filter({ $0.name == "Report an Issue" })?.first
-    {
-        MenuReader.performAction(at: item)
-    }
+    // do something here...
 }

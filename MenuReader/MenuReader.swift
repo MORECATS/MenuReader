@@ -10,19 +10,22 @@ import AppKit
 
 extension MenuReader
 {
-    class MenuItem
+    class MenuItem: Equatable
     {
         let name: String
         let axUIElement: AXUIElement?
         let parent: MenuItem?
         
+        let shortcuts: [String]?
+        
         var subitems = [MenuItem]()
         
-        init(name: String, axUIElement: AXUIElement?, parent: MenuItem?)
+        init(name: String, axUIElement: AXUIElement?, parent: MenuItem?, shortcuts: [String]? = nil)
         {
             self.name = name
             self.axUIElement = axUIElement
             self.parent = parent
+            self.shortcuts = shortcuts
         }
                 
         func filter(_ isIncluded: (MenuItem) -> Bool) -> [MenuItem]?
@@ -46,6 +49,11 @@ extension MenuReader
                 return false
             }
             return (MenuReader.getAttribute(element: element, name: kAXEnabledAttribute) as? Bool) ?? false
+        }
+        
+        static func == (lhs: MenuItem, rhs: MenuItem) -> Bool
+        {
+            lhs.name == rhs.name && lhs.axUIElement == rhs.axUIElement
         }
     }
 }
@@ -75,6 +83,23 @@ extension MenuReader
 
 struct MenuReader
 {
+    static let modifierCombinations: [Int: String] = [0: "⌘",
+                                                      1: "⇧ ⌘",
+                                                      2: "⌥ ⌘",
+                                                      3: "⌥ ⇧ ⌘",
+                                                      4: "⌃ ⌘",
+                                                      5: "⌃ ⇧ ⌘",
+                                                      6: "⌃ ⌥ ⌘",
+                                                      7: "⌃ ⌥ ⇧ ⌘",
+                                                      8: "",
+                                                      9: "⇧",
+                                                      10: "⌥",
+                                                      11: "⌥ ⇧",
+                                                      12: "⌃",
+                                                      13: "⌃ ⇧",
+                                                      14: "⌃ ⌥",
+                                                      15: "⌃ ⌥ ⇧"]
+    
     static func getMenuItems(app: NSRunningApplication? = NSWorkspace.shared.frontmostApplication) -> MenuItem?
     {
         guard let app = app else {
@@ -89,7 +114,7 @@ struct MenuReader
         var menuBarValue: CFTypeRef? = nil
         let status = AXUIElementCopyAttributeValue(axApp, kAXMenuBarAttribute as CFString, &menuBarValue)
         guard status == .success else {
-            print("AXError: \(status).")
+            print("error: \(status).")
             return nil
         }
         let menuBar = menuBarValue as! AXUIElement
@@ -100,8 +125,13 @@ struct MenuReader
            !childrens.isEmpty
         {
             childrens.forEach() { element in
-                guard let name = getAttribute(element: element, name: kAXTitleAttribute) as? String else {
+                guard var name = getAttribute(element: element, name: kAXTitleAttribute) as? String else {
                     return
+                }
+                
+                if top.subitems.isEmpty, name == "Apple"
+                {
+                    name = ""
                 }
                 
                 let menu = MenuItem(name: name, axUIElement: element, parent: top)
@@ -129,10 +159,21 @@ struct MenuReader
                    !childrens.isEmpty
                 {
                     childrens.forEach() { element in
-                        if let name = getAttribute(element: element, name: kAXTitleAttribute) as? String,
-                           !name.isEmpty
+                        if let name = getAttribute(element: element, name: kAXTitleAttribute) as? String, !name.isEmpty,
+                           getAttribute(element: element, name: kAXSizeAttribute) != nil,
+                           (getAttribute(element: element, name: kAXEnabledAttribute) as? Bool) == true
                         {
-                            let submenu = MenuItem(name: name, axUIElement: element, parent: menu)
+                            let shortcutKey = getAttribute(element: element, name: kAXMenuItemCmdCharAttribute) as? String
+                            
+                            var shortcuts: [String]? = nil
+                            if let shortcutKey = shortcutKey, !shortcutKey.isEmpty,
+                               let modifiersValue = getAttribute(element: element, name: kAXMenuItemCmdModifiersAttribute) as? Int
+                            {
+                                shortcuts = modifierCombinations[modifiersValue]?.components(separatedBy: " ")
+                                shortcuts?.append(shortcutKey)
+                            }
+                            
+                            let submenu = MenuItem(name: name, axUIElement: element, parent: menu, shortcuts: shortcuts)
                             menu.subitems.append(submenu)
                             getSubitems(element: element, menu: submenu)
                         }
@@ -150,3 +191,4 @@ struct MenuReader
         AXUIElementPerformAction(element, kAXPressAction as CFString)
     }
 }
+
